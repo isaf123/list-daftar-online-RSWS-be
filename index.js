@@ -1,15 +1,15 @@
 import express from "express";
 import cors from "cors";
-import { getJumlahJanjiPoli, dataRuangan, grafikPasien } from "./controller.js";
+import routers from "./router/index.js";
 const app = express();
 
 const PORT = 7320;
 app.use(express.json());
 app.use(cors());
 
-app.post("/data", getJumlahJanjiPoli);
-app.get("/ruangan", dataRuangan);
-app.post("/grafik-pasien", grafikPasien);
+app.use("/", routers.janjiPoliRouter);
+app.use("/daftarpoli", routers.daftarPoliRouter);
+app.use("/auth", routers.authRouter);
 app.get("/", (req, res) => {
   res.send("GET API POSTGREE");
 });
