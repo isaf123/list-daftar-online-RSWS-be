@@ -14,7 +14,10 @@ export async function loginUser(req, res, next) {
     if (!result.length)
       return res.status(401).send("password atau username salah");
     const { nama_pemakai, psw } = result[0];
-    const token = jwt.sign({ nama_pemakai, psw }, process.env.TOKEN_KEY);
+    const token = jwt.sign(
+      { nama_pemakai, psw },
+      process.env.TOKEN_KEY || "secret"
+    );
 
     return res.json(token);
   } catch (error) {
