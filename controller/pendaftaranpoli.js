@@ -1,5 +1,6 @@
 import { dbPg } from "../config.js";
 import { stripDate } from "../utils/time.js";
+import { ruanganAnd } from "../utils/ruangan.js";
 
 export const totalPendaftaran = async (req, res, next) => {
   try {
@@ -64,6 +65,7 @@ export const tabelJumlahPasien = async (req, res, next) => {
       FROM pendaftaran_t b
       JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
       WHERE date(b.tgl_pendaftaran) = '${getDate}'
+
       GROUP BY r.ruangan_nama
       ORDER BY total DESC
       LIMIT 10
@@ -76,11 +78,20 @@ export const tabelJumlahPasien = async (req, res, next) => {
       WHERE date(tgl_pendaftaran) = '${getDate}'
     `;
 
+    const queryListPoli = `SELECT 
+      r.ruangan_nama
+      FROM pendaftaran_t b
+      JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
+      WHERE date(b.tgl_pendaftaran) = '${getDate}'
+      GROUP BY r.ruangan_nama
+    `;
+
     const result = await dbPg(query);
     const total = await dbPg(queryCount);
+    const listPoli = await dbPg(queryListPoli);
     const totalPage = Math.ceil(total[0].count / 10);
 
-    res.json({ totalData: total[0].count, totalPage, result });
+    res.json({ totalData: total[0].count, totalPage, result, listPoli });
   } catch (error) {
     next(error);
   }
@@ -88,7 +99,7 @@ export const tabelJumlahPasien = async (req, res, next) => {
 
 export const tabelListPasien = async (req, res, next) => {
   try {
-    const { date, page = 1 } = req.query;
+    const { date, page = 1, search } = req.query;
     const getDate = stripDate(date);
     const skip = (page - 1) * 10;
     const query = `
@@ -102,6 +113,7 @@ export const tabelListPasien = async (req, res, next) => {
       JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
       JOIN pasien_m n ON b.pasien_id=n.pasien_id
       WHERE date(b.tgl_pendaftaran) = '${getDate}'
+      ${search ? `AND n.nama_pasien ILIKE '%${search}%'` : ""}
       ORDER BY create_time DESC
       LIMIT 10
       OFFSET ${skip}
