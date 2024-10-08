@@ -54,8 +54,10 @@ export const totalOfflineOnlien = async (req, res, next) => {
 export const tabelJumlahPasien = async (req, res, next) => {
   try {
     const { date, page = 1 } = req.query;
+    const { ruangan } = req.body;
     const getDate = stripDate(date);
     const skip = (page - 1) * 10;
+
     const query = `
     SELECT 
       r.ruangan_nama AS Poli,
@@ -65,7 +67,7 @@ export const tabelJumlahPasien = async (req, res, next) => {
       FROM pendaftaran_t b
       JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
       WHERE date(b.tgl_pendaftaran) = '${getDate}'
-
+      ${ruangan.length ? ruanganAnd(ruangan) : ""}
       GROUP BY r.ruangan_nama
       ORDER BY total DESC
       LIMIT 10
@@ -79,11 +81,11 @@ export const tabelJumlahPasien = async (req, res, next) => {
     `;
 
     const queryListPoli = `SELECT 
-      r.ruangan_nama
-      FROM pendaftaran_t b
-      JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
-      WHERE date(b.tgl_pendaftaran) = '${getDate}'
-      GROUP BY r.ruangan_nama
+    r.ruangan_nama
+    FROM pendaftaran_t b
+    JOIN ruangan_m r ON b.ruangan_id=r.ruangan_id
+    WHERE date(b.tgl_pendaftaran) = '${getDate}'
+    GROUP BY r.ruangan_nama
     `;
 
     const result = await dbPg(query);
